@@ -24,6 +24,7 @@ var (
 // Note: Make sure to call it before calling Go()
 // If size<=0, will use default value.
 // If expire<=0, will use default value.
+// If interval<=0, will use default value.
 func SetGopool(size int32, expire, interval time.Duration) {
 	_maxGoroutinesSize, _maxGoroutineIdleDuration, _commonBlockPollingInterval := size, expire, interval
 	if _gopool != nil {
