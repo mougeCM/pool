@@ -2,15 +2,16 @@
 
 ### 1. Why do you have a coroutine pool？
 
-> 1.Golang does not limit the number of goroutines generated. Although the creation of goroutines is very lightweight (about 8kb), unlimited large-scale creation may squash memory; to create a million goroutine, the memory created is about `8000000/(1024*1024)=7.6G`; the coroutine pool can control the number of goroutines very well. 
-> 2.When there are a large number of goroutines at the same time, the performance of the runtime scheduling and GC is greatly reduced, and even problems may occur.     
+> 1.Golang does not limit the number of goroutines generated. Although the creation of goroutines is very lightweight (about 8kb), unlimited large-scale creation may squash memory; to create a million goroutine, the memory created is about `8000000/(1024*1024)=7.6G`; the coroutine pool can control the number of goroutines very well.      
+
+> 2.When there are a large number of goroutines at the same time, the performance of the runtime scheduling and GC is greatly reduced, and even problems may occur.           
+
 > 3.When the request is too high, each time a goroutine is created, goroutine reuse is not done, and a lot of resources are wasted; the goroutine of the coroutine pool can be reused to save resources.
 
 ### 2. Design ideas
 
 ```
-	Initialize a Goroutine Pool when starting the service (maintain a stack-like FILO queue)
-，Inside is the Worker responsible for processing the task, and then the client submits the task to the pool:
+	Initialize a Goroutine Pool when starting the service (maintain a stack-like FILO queue)，Inside is the Worker responsible for processing the task, and then the client submits the task to the pool:
 	1.Check whether there is a free worker in the current Worker queue, and if so, take out the current task;
 	
 	2.There is no idle worker, it is judged whether the currently running worker has exceeded the capacity of the pool, and then the device waits until the worker is put back to the pool; otherwise, a new worker (goroutine) process is opened;
