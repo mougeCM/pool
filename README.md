@@ -11,7 +11,7 @@
 ### 2. Design ideas
 
 ```
-	Initialize a Goroutine Pool when starting the service (maintain a stack-like FILO queue)，Inside is the Worker responsible for processing the task, and then the client submits the task to the pool:
+Initialize a Goroutine Pool when starting the service (maintain a stack-like FILO queue)，Inside is the Worker responsible for processing the task, and then the client submits the task to the pool:
 	1.Check whether there is a free worker in the current Worker queue, and if so, take out the current task;
 	
 	2.There is no idle worker, it is judged whether the currently running worker has exceeded the capacity of the pool, and then the device waits until the worker is put back to the pool; otherwise, a new worker (goroutine) process is opened;
