@@ -1,8 +1,10 @@
-package goroutine
+package pool
 
 import (
+	"context"
 	"errors"
 	"log"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -124,10 +126,15 @@ func NewPool(size int32, expire, interval time.Duration) *Pool {
 	return p
 }
 
+// Create giroutine
+func (p *Pool) Go(fn f) error {
+	return p.submit(fn)
+}
+
 // TryGo tries to execute the function via goroutine.
 // If there are no concurrent resources, execute it synchronously.
 func (p *Pool) TryGo(fn f) {
-	err := p.submit(fn)
+	err := p.Go(fn)
 	if err != nil {
 		if err == ErrPoolClosed {
 			log.Printf("%v\n", err)
@@ -137,32 +144,29 @@ func (p *Pool) TryGo(fn f) {
 }
 
 // AnywayGo block until the goroutine is obtained.
-func (p *Pool) AnywayGo(fn f) error {
+func (p *Pool) AnywayGo(fn f, ctx ...context.Context) error {
 	if len(p.release) > 0 {
 		return ErrPoolClosed
 	}
 
-	w := p.getWorker()
-	if w == nil {
-		for {
-			p.mu.Lock()
-			idleWorkers := p.workers
-			l := len(idleWorkers) - 1
-			if l < 0 {
-				p.mu.Unlock()
-				time.Sleep(p.interval) // block polling interval
-				continue
+	if len(ctx) == 0 {
+		for p.Go(fn) != nil {
+			runtime.Gosched()
+		}
+		return nil
+	}
+	c := ctx[0]
+	for {
+		select {
+		case <-c.Done():
+			return c.Err()
+		default:
+			if p.Go(fn) == nil {
+				return nil
 			}
-
-			w = p.workers[l]
-			idleWorkers[l] = nil
-			p.workers = idleWorkers[:l]
-			p.mu.Unlock()
-			break
+			runtime.Gosched()
 		}
 	}
-	w.task <- fn
-	return nil
 }
 
 // Release closes this pool.

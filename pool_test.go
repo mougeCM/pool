@@ -1,4 +1,4 @@
-package goroutine
+package pool
 
 import (
 	"runtime"
