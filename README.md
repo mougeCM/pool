@@ -49,20 +49,20 @@ _1000w concurrent test_
 package main
 
 import (
-	"wesure.cn/pool"
+	"github.com/mougeCM/pool"
 )
 
 func main() {
 	// Use custom configuration【Also choose not to set: use default configuration】
-	pool.SetGopool(100, 10*time.Second(), 10*time.Second())
+	goPool := pool.NewPool(100, 10*time.Second(), 10*time.Second())
 
 	// If all the goroutines in the coroutine pool are running, they are executed synchronously.
-	pool.TryGo(func(){
+	goPool.TryGo(func(){
 		// func body
 	})
 	
 	// It will be executed asynchronously anyway, and if no goroutine is available, it will block waiting.
-	pool.AnywayGo(func() {
+	goPool.AnywayGo(func() {
 		// func body
 	})
 }
